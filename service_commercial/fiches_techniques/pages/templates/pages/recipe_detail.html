@@ -1,0 +1,743 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+{% if recipe.product_name %}{{ recipe.product_name }}{% else %}{{ recipe.product_id }}{% endif %} - Recipe Details
+{% endblock %}
+
+{% block extra_css %}
+  <style>
+    /* Ensure navbar matches home page exactly */
+    .navbar {
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+    .navbar .logo {
+      max-width: 180px;
+      height: auto;
+    }
+    .navbar-brand {
+      padding-top: 0.3125rem;
+      padding-bottom: 0.3125rem;
+      margin-right: 1rem;
+    }
+    
+    .recipe-header {
+      background: #f8f9fa;
+      color: #333;
+      padding: 3rem 0;
+      border-bottom: 1px solid #dee2e6;
+      margin-top: 80px;
+    }
+    .nutrition-card {
+      border: 1px solid #dee2e6;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      text-align: center;
+      transition: transform 0.2s ease;
+    }
+    .nutrition-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .nutrition-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #950b39;
+    }
+    .nutrition-label {
+      font-size: 0.9rem;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .ingredients-list {
+      background-color: #f8f9fa;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      border-left: 4px solid #950b39;
+    }
+    .allergens-alert {
+      background-color: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      border-left: 4px solid #f39c12;
+    }
+    .section-title {
+      color: #950b39;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #950b39;
+      display: inline-block;
+    }
+    .metadata-item {
+      background-color: #f8f9fa;
+      border-radius: 0.375rem;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .back-button {
+      background-color: #f8f9fa;
+      border: 1px solid #6c757d;
+      color: #6c757d;
+    }
+    .back-button:hover {
+      background-color: #e9ecef;
+      border-color: #5a6268;
+      color: #5a6268;
+    }
+    
+    .btn-primary {
+      background-color: #950b39;
+      border-color: #950b39;
+      color: white;
+    }
+    .btn-primary:hover {
+      background-color: #7a092e;
+      border-color: #7a092e;
+      color: white;
+    }
+    
+    /* Tag management styles */
+    .tag-badge {
+      background-color: #950b39 !important;
+      font-size: 0.9rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 1rem;
+    }
+    
+    .tag-badge .btn-close {
+      font-size: 0.6rem;
+      margin-left: 0.5rem;
+    }
+    
+    .tag-input-group {
+      max-width: 400px;
+    }
+    
+    #new_tag_input {
+      border-color: #950b39;
+    }
+    
+    #new_tag_input:focus {
+      border-color: #950b39;
+      box-shadow: 0 0 0 0.2rem rgba(149, 11, 57, 0.25);
+    }
+
+    /* Nutritional Calculator Styles */
+    .calculator-card {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border: 2px solid #950b39;
+      border-radius: 1rem;
+      padding: 2rem;
+      margin: 2rem 0;
+      box-shadow: 0 8px 25px rgba(149, 11, 57, 0.1);
+    }
+
+    .calculator-title {
+      color: #950b39;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+    }
+
+    .calculator-inputs {
+      background: white;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid #dee2e6;
+    }
+
+    .calculator-input {
+      border: 2px solid #dee2e6;
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+
+    .calculator-input:focus {
+      border-color: #950b39;
+      box-shadow: 0 0 0 0.2rem rgba(149, 11, 57, 0.25);
+      outline: none;
+    }
+
+    .calculator-table {
+      background: white;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      font-size: 0.9rem;
+    }
+
+    .calculator-table thead {
+      background: linear-gradient(135deg, #950b39 0%, #c41e3a 100%);
+      color: white;
+    }
+
+    .calculator-table th {
+      padding: 1rem;
+      font-weight: 600;
+      border: none;
+    }
+
+    .calculator-table td {
+      padding: 0.75rem 1rem;
+      border-color: #f8f9fa;
+      vertical-align: middle;
+    }
+
+    .calculator-table tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    .calculator-value {
+      font-weight: 600;
+      color: #950b39;
+    }
+
+    .calculator-unit {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+
+    .input-label {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <!-- RECIPE HEADER -->
+  <section class="recipe-header">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h1 class="mb-2">
+            {% if recipe.product_name %}
+              <i class="bi bi-journal-text"></i> {{ recipe.product_name }}
+            {% else %}
+              <i class="bi bi-journal-text"></i> {{ recipe.product_id }}
+            {% endif %}
+          </h1>
+          {% if recipe.product_name %}
+            <p class="mb-2 opacity-75">
+              <i class="bi bi-tag"></i> <strong>Product ID:</strong> {{ recipe.product_id }}
+            </p>
+          {% endif %}
+          {% if recipe.portion_size %}
+            <p class="mb-0 opacity-75">
+              <i class="bi bi-scale"></i> <strong>Portion Size:</strong> {{ recipe.portion_size }}
+            </p>
+          {% endif %}
+        </div>
+        <div class="col-md-4 text-md-end">
+          <button onclick="history.back()" class="btn back-button me-2">
+            <i class="bi bi-arrow-left"></i> Back to Results
+          </button>
+          <a href="{% url 'pages:home' %}" class="btn back-button">
+            <i class="bi bi-search"></i> New Search
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RECIPE DETAILS -->
+  <section class="py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8">
+          <!-- NUTRITIONAL CALCULATOR -->
+          <div class="calculator-card" 
+               data-base-proteins="{% if recipe.proteines_100g %}{{ recipe.proteines_100g }}{% else %}0{% endif %}"
+               data-base-calories="{% if recipe.kcal_100g %}{{ recipe.kcal_100g }}{% else %}0{% endif %}"
+               data-default-portion="{% if recipe.portion_size %}{{ recipe.portion_size }}{% else %}100{% endif %}"
+               data-kcal="{% if recipe.kcal_100g %}{{ recipe.kcal_100g }}{% else %}0{% endif %}"
+               data-kj="{% if recipe.kj_100g %}{{ recipe.kj_100g }}{% else %}0{% endif %}"
+               data-proteins="{% if recipe.proteines_100g %}{{ recipe.proteines_100g }}{% else %}0{% endif %}"
+               data-lipids="{% if recipe.lipides_100g %}{{ recipe.lipides_100g }}{% else %}0{% endif %}"
+               data-carbs="{% if recipe.glucides_100g %}{{ recipe.glucides_100g }}{% else %}0{% endif %}"
+               data-sugars="{% if recipe.sucres_100g %}{{ recipe.sucres_100g }}{% else %}0{% endif %}"
+               data-fiber="{% if recipe.fibres_100g %}{{ recipe.fibres_100g }}{% else %}0{% endif %}"
+               data-salt="{% if recipe.sel_100g %}{{ recipe.sel_100g }}{% else %}0{% endif %}">
+            <h3 class="calculator-title">
+              <i class="bi bi-calculator"></i> Nutritional Calculator
+            </h3>
+            
+            <!-- Calculator Inputs -->
+            <div class="calculator-inputs">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="input-label">Portion Size (g)</label>
+                  <input type="number" 
+                         class="form-control calculator-input" 
+                         id="portionSize" 
+                         value="{% if recipe.portion_size %}{{ recipe.portion_size }}{% else %}100{% endif %}" 
+                         min="1" 
+                         step="1"
+                         placeholder="Enter portion size">
+                  <small class="text-muted">{% if recipe.portion_size %}Default: {{ recipe.portion_size }}g{% else %}Default: 100g{% endif %}</small>
+                </div>
+                <div class="col-md-6">
+                  <label class="input-label">Target Calories (kcal)</label>
+                  <input type="number" 
+                         class="form-control calculator-input" 
+                         id="targetCalories" 
+                         {% if recipe.kcal_100g %}value="{{ recipe.kcal_100g }}"{% endif %}
+                         min="1" 
+                         step="1"
+                         placeholder="Enter target calories">
+                  <small class="text-muted">Calculates portion for this calorie amount</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Results Table -->
+            <div class="table-responsive">
+              <table class="table calculator-table mb-0">
+                <thead>
+                  <tr>
+                    <th>Nutrient</th>
+                    <th>Database Portion ({% if recipe.portion_size %}{{ recipe.portion_size }}g{% else %}100g{% endif %})</th>
+                    <th>Adjusted Portion (<span id="adjusted-portion-header">{% if recipe.portion_size %}{{ recipe.portion_size }}{% else %}100{% endif %}</span>g)</th>
+                    <th>Calculated Values</th>
+                    <th>Unit</th>
+                  </tr>
+                </thead>
+                <tbody id="calculatorResults">
+                  {% if recipe.kcal_100g %}
+                  <tr>
+                    <td><strong>Calories</strong></td>
+                    <td><span class="calculator-value" id="db-kcal">{{ recipe.kcal_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-value" id="adj-kcal">{{ recipe.kcal_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-value" data-base="{{ recipe.kcal_100g }}" id="calc-kcal">{{ recipe.kcal_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-unit">kcal</span></td>
+                  </tr>
+                  {% endif %}
+                  {% if recipe.proteines_100g %}
+                  <tr>
+                    <td><strong>Proteins</strong></td>
+                    <td><span class="calculator-value" id="db-proteins">{{ recipe.proteines_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-value" id="adj-proteins">{{ recipe.proteines_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-value" data-base="{{ recipe.proteines_100g }}" id="calc-proteins">{{ recipe.proteines_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-unit">g</span></td>
+                  </tr>
+                  {% endif %}
+                  {% if recipe.lipides_100g %}
+                  <tr>
+                    <td><strong>Lipids</strong></td>
+                    <td><span class="calculator-value" id="db-lipids">{{ recipe.lipides_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-value" id="adj-lipids">{{ recipe.lipides_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-value" data-base="{{ recipe.lipides_100g }}" id="calc-lipids">{{ recipe.lipides_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-unit">g</span></td>
+                  </tr>
+                  {% endif %}
+                  {% if recipe.glucides_100g %}
+                  <tr>
+                    <td><strong>Carbohydrates</strong></td>
+                    <td><span class="calculator-value" id="db-carbs">{{ recipe.glucides_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-value" id="adj-carbs">{{ recipe.glucides_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-value" data-base="{{ recipe.glucides_100g }}" id="calc-carbs">{{ recipe.glucides_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-unit">g</span></td>
+                  </tr>
+                  {% endif %}
+                  {% if recipe.sucres_100g %}
+                  <tr>
+                    <td><strong>Sugars</strong></td>
+                    <td><span class="calculator-value" id="db-sugars">{{ recipe.sucres_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-value" id="adj-sugars">{{ recipe.sucres_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-value" data-base="{{ recipe.sucres_100g }}" id="calc-sugars">{{ recipe.sucres_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-unit">g</span></td>
+                  </tr>
+                  {% endif %}
+                  {% if recipe.fibres_100g %}
+                  <tr>
+                    <td><strong>Fiber</strong></td>
+                    <td><span class="calculator-value" id="db-fiber">{{ recipe.fibres_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-value" id="adj-fiber">{{ recipe.fibres_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-value" data-base="{{ recipe.fibres_100g }}" id="calc-fiber">{{ recipe.fibres_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-unit">g</span></td>
+                  </tr>
+                  {% endif %}
+                  {% if recipe.sel_100g %}
+                  <tr>
+                    <td><strong>Salt</strong></td>
+                    <td><span class="calculator-value" id="db-salt">{{ recipe.sel_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-value" id="adj-salt">{{ recipe.sel_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-value" data-base="{{ recipe.sel_100g }}" id="calc-salt">{{ recipe.sel_100g|floatformat:1 }}</span></td>
+                    <td><span class="calculator-unit">g</span></td>
+                  </tr>
+                  {% endif %}
+                  <tr style="background-color: #f8f9fa; font-weight: bold;">
+                    <td><strong>Portion Size</strong></td>
+                    <td><span class="calculator-value" id="db-portion">{% if recipe.portion_size %}{{ recipe.portion_size }}{% else %}100{% endif %}</span></td>
+                    <td><span class="calculator-value" id="adj-portion">{% if recipe.portion_size %}{{ recipe.portion_size }}{% else %}100{% endif %}</span></td>
+                    <td><span class="calculator-value" id="calc-portion">{% if recipe.portion_size %}{{ recipe.portion_size }}{% else %}100{% endif %}</span></td>
+                    <td><span class="calculator-unit">g</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- INGREDIENTS -->
+          {% if recipe.ingredients_display %}
+            <h2 class="section-title">Ingredients</h2>
+            <div class="ingredients-list mb-5">
+              <div class="ingredients-text">
+                {{ recipe.ingredients_display|linebreaksbr }}
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- ALLERGENS -->
+          {% if recipe.allergens %}
+            <h2 class="section-title">Allergen Information</h2>
+            <div class="allergens-alert mb-5">
+              <div class="d-flex align-items-start">
+                <i class="bi bi-exclamation-triangle-fill text-warning me-2 mt-1"></i>
+                <div>
+                  <strong>Important Allergen Information:</strong>
+                  <div class="mt-2">{{ recipe.allergens|linebreaksbr }}</div>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- METADATA SIDEBAR -->
+        <div class="col-lg-4">
+          <h2 class="section-title">Recipe Details</h2>
+          
+          {% if recipe.product_name %}
+            <div class="metadata-item">
+              <strong>Product Name:</strong><br>
+              {{ recipe.product_name }}
+            </div>
+          {% endif %}
+          
+          <div class="metadata-item">
+            <strong>Product ID:</strong><br>
+            <code>{{ recipe.product_id }}</code>
+          </div>
+          
+          {% if recipe.portion_size %}
+            <div class="metadata-item">
+              <strong>Portion Size:</strong><br>
+              {{ recipe.portion_size }}
+            </div>
+          {% endif %}
+          
+          {% if recipe.source_file %}
+            <div class="metadata-item">
+              <strong>Source File:</strong><br>
+              <small class="text-muted">{{ recipe.source_file|truncatechars:50 }}</small>
+            </div>
+          {% endif %}
+          
+          <div class="metadata-item">
+            <strong>Last Updated:</strong><br>
+            <small class="text-muted">{{ recipe.updated_at|date:"M j, Y g:i A" }}</small>
+          </div>
+          
+          <div class="metadata-item">
+            <strong>Created:</strong><br>
+            <small class="text-muted">{{ recipe.created_at|date:"M j, Y g:i A" }}</small>
+          </div>
+
+          <!-- TAG MANAGEMENT -->
+          <div class="mt-4">
+            <h5 class="mb-3">Tags</h5>
+            
+            <!-- Display existing tags -->
+            <div class="mb-3">
+              {% if recipe.tags %}
+                {% for tag in recipe.tags %}
+                  <span class="badge tag-badge me-2 mb-2 position-relative">
+                    <i class="bi bi-tag-fill me-1"></i>{{ tag }}
+                    <form method="post" class="d-inline ms-2" onsubmit="return confirm('Remove tag {{ tag }}?')">
+                      {% csrf_token %}
+                      <input type="hidden" name="remove_tag" value="{{ tag }}">
+                      <button type="submit" class="btn-close btn-close-white" style="font-size: 0.6rem;" aria-label="Remove tag"></button>
+                    </form>
+                  </span>
+                {% endfor %}
+              {% else %}
+                <p class="text-muted mb-3">No tags added yet.</p>
+              {% endif %}
+            </div>
+
+            <!-- Add new tag form -->
+            <form method="post" class="mb-3">
+              {% csrf_token %}
+              <div class="input-group tag-input-group">
+                <input type="text" 
+                       class="form-control" 
+                       name="new_tag" 
+                       id="new_tag_input"
+                       placeholder="Add a new tag..." 
+                       list="tag_suggestions"
+                       autocomplete="off">
+                <datalist id="tag_suggestions">
+                  {% for tag in all_tags %}
+                    <option value="{{ tag }}">
+                  {% endfor %}
+                </datalist>
+                <button class="btn btn-outline-primary" type="submit" name="add_tag">
+                  <i class="bi bi-plus-circle"></i> Add Tag
+                </button>
+              </div>
+              <div class="form-text">
+                Start typing to see suggestions from existing tags, or create a new one.
+              </div>
+            </form>
+          </div>
+
+          <!-- QUICK ACTIONS -->
+          <div class="mt-4">
+            <h5 class="mb-3">Quick Actions</h5>
+            <div class="d-grid gap-2">
+              <button class="btn btn-outline-primary" onclick="window.print()">
+                <i class="bi bi-printer"></i> Print Recipe
+              </button>
+              <button id="exportWordBtn" class="btn btn-primary">
+                <i class="bi bi-file-earmark-word"></i> Export to Word
+              </button>
+              <button class="btn btn-outline-secondary" 
+                      onclick="copyToClipboard()"
+                      data-product-id="{{ recipe.product_id }}"
+                      data-product-name="{% if recipe.product_name %}{{ recipe.product_name }}{% endif %}"
+                      data-portion-size="{% if recipe.portion_size %}{{ recipe.portion_size }}{% endif %}">
+                <i class="bi bi-clipboard"></i> Copy Details
+              </button>
+              <form method="post" action="{% url 'pages:delete_recipe' recipe.id %}" 
+                    onsubmit="return confirm('Are you sure you want to delete recipe {% if recipe.product_name %}{{ recipe.product_name }} ({{ recipe.product_id }}){% else %}{{ recipe.product_id }}{% endif %}? This action cannot be undone and will permanently remove this recipe from the database.')" 
+                    class="mt-2">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger w-100">
+                  <i class="bi bi-trash"></i> Delete Recipe
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+  <script>
+    function copyToClipboard() {
+      var btn = event.target.closest('button');
+      var productName = btn.getAttribute('data-product-name');
+      var productId = btn.getAttribute('data-product-id');
+      
+      var text = "Recipe: ";
+      if (productName) {
+        text += productName + " (" + productId + ")\\n";
+      } else {
+        text += productId + "\\n";
+      }
+      
+      var portionSize = btn.getAttribute('data-portion-size');
+      if (portionSize) {
+        text += "Portion Size: " + portionSize + "\\n";
+      }
+      
+      // Copy to clipboard
+      navigator.clipboard.writeText(text).then(function() {
+        var originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+        btn.classList.add('btn-success');
+        btn.classList.remove('btn-outline-secondary');
+        
+        setTimeout(function() {
+          btn.innerHTML = originalText;
+          btn.classList.remove('btn-success');
+          btn.classList.add('btn-outline-secondary');
+        }, 2000);
+      }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+        alert('Could not copy to clipboard. Please select and copy manually.');
+      });
+    }
+
+    // Add print styles
+    const style = document.createElement('style');
+    style.textContent = `
+      @media print {
+        .back-button, .btn { display: none !important; }
+        .recipe-header { background: white !important; color: black !important; }
+        .section-title { color: black !important; }
+        .nutrition-value { color: black !important; }
+        .calculator-card { display: none !important; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Nutritional Calculator
+    function initCalculator() {
+      const calculatorCard = document.querySelector('.calculator-card');
+      const portionInput = document.getElementById('portionSize');
+      const caloriesInput = document.getElementById('targetCalories');
+      
+      // Get base values from data attributes
+      const baseValues = {
+        calories: parseFloat(calculatorCard.getAttribute('data-base-calories')) || 0
+      };
+
+      function updateCalculations() {
+        // Get values from data attributes
+        const calculatorCard = document.querySelector('.calculator-card');
+        const defaultPortionSize = parseFloat(calculatorCard.getAttribute('data-default-portion')) || 100;
+        const portionSize = parseFloat(portionInput.value) || defaultPortionSize;
+        
+        // All database values are per 100g
+        // Column 2: Database portion values (database values * database_portion_size / 100)
+        // Column 3: Adjusted portion values (database values * user_portion_size / 100)
+        // Column 4: Same as Column 3 for now
+        
+        const dbPortionMultiplier = defaultPortionSize / 100; // Database portion vs 100g
+        const adjPortionMultiplier = portionSize / 100; // User portion vs 100g
+
+        // Update header to show current adjusted portion size
+        document.getElementById('adjusted-portion-header').textContent = portionSize.toFixed(0);
+
+        // Update database portion column (column 2) - values for the database portion size
+        const nutritionalElements = [
+          { dbId: 'db-kcal', adjId: 'adj-kcal', calcId: 'calc-kcal', dataKey: 'data-kcal' },
+          { dbId: 'db-kj', adjId: 'adj-kj', calcId: 'calc-kj', dataKey: 'data-kj' },
+          { dbId: 'db-proteins', adjId: 'adj-proteins', calcId: 'calc-proteins', dataKey: 'data-proteins' },
+          { dbId: 'db-lipids', adjId: 'adj-lipids', calcId: 'calc-lipids', dataKey: 'data-lipids' },
+          { dbId: 'db-carbs', adjId: 'adj-carbs', calcId: 'calc-carbs', dataKey: 'data-carbs' },
+          { dbId: 'db-sugars', adjId: 'adj-sugars', calcId: 'calc-sugars', dataKey: 'data-sugars' },
+          { dbId: 'db-fiber', adjId: 'adj-fiber', calcId: 'calc-fiber', dataKey: 'data-fiber' },
+          { dbId: 'db-salt', adjId: 'adj-salt', calcId: 'calc-salt', dataKey: 'data-salt' }
+        ];
+
+        nutritionalElements.forEach(function(item) {
+          const per100gValue = parseFloat(calculatorCard.getAttribute(item.dataKey)) || 0;
+          
+          if (per100gValue > 0) {
+            // Column 2: Database portion values
+            const dbElement = document.getElementById(item.dbId);
+            if (dbElement) {
+              const dbPortionValue = (per100gValue * dbPortionMultiplier).toFixed(1);
+              dbElement.textContent = dbPortionValue;
+            }
+            
+            // Column 3: Adjusted portion values
+            const adjElement = document.getElementById(item.adjId);
+            if (adjElement) {
+              const adjPortionValue = (per100gValue * adjPortionMultiplier).toFixed(1);
+              adjElement.textContent = adjPortionValue;
+            }
+            
+            // Column 4: Calculated values (same as adjusted for now)
+            const calcElement = document.getElementById(item.calcId);
+            if (calcElement) {
+              const calcValue = (per100gValue * adjPortionMultiplier).toFixed(1);
+              calcElement.textContent = calcValue;
+            }
+          }
+        });
+
+        // Update portion size displays
+        document.getElementById('db-portion').textContent = defaultPortionSize.toFixed(0);
+        document.getElementById('adj-portion').textContent = portionSize.toFixed(0);
+        document.getElementById('calc-portion').textContent = portionSize.toFixed(0);
+      }
+
+      function calculatePortionForCalories() {
+        const targetCalories = parseFloat(caloriesInput.value);
+        if (targetCalories && baseValues.calories > 0) {
+          const requiredPortion = (targetCalories / baseValues.calories) * 100;
+          portionInput.value = requiredPortion.toFixed(1);
+          updateCalculations();
+        }
+      }
+
+      // Event listeners
+      if (portionInput) portionInput.addEventListener('input', updateCalculations);
+      if (caloriesInput) caloriesInput.addEventListener('input', calculatePortionForCalories);
+
+      // Initialize with default values
+      updateCalculations();
+    }
+
+    // Initialize calculator when page loads
+    document.addEventListener('DOMContentLoaded', initCalculator);
+
+    // Word Export functionality
+    document.getElementById('exportWordBtn').addEventListener('click', function() {
+      // Gather current calculator values
+      const calculatorData = {};
+      
+      // Get calculated values from the table
+      const calcTable = document.querySelector('.calculator-results table');
+      if (calcTable) {
+        const rows = calcTable.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+          const cells = row.querySelectorAll('td');
+          if (cells.length >= 3) {
+            const nutrient = cells[0].textContent.trim().toLowerCase();
+            const calculatedValue = cells[2].textContent.trim();
+            
+            // Map nutrient names to keys
+            const nutrientMap = {
+              'calories (kcal)': 'kcal',
+              'energy (kj)': 'kj',
+              'fats (g)': 'fats',
+              'lipids (g)': 'lipids',
+              'saturated fatty acids (g)': 'saturated_fats',
+              'carbohydrates (g)': 'carbs',
+              'sugars (g)': 'sugars',
+              'starch (g)': 'starch',
+              'fiber (g)': 'fiber',
+              'proteins (g)': 'proteins',
+              'salt (g)': 'salt'
+            };
+            
+            const key = nutrientMap[nutrient];
+            if (key && calculatedValue !== 'N/A') {
+              calculatorData[key] = calculatedValue;
+            }
+          }
+        });
+      }
+      
+      // Create a form and submit to export endpoint
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '{% url "pages:export_recipe_word" recipe.id %}';
+      
+      // Add CSRF token
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      const csrfInput = document.createElement('input');
+      csrfInput.type = 'hidden';
+      csrfInput.name = 'csrfmiddlewaretoken';
+      csrfInput.value = csrfToken;
+      form.appendChild(csrfInput);
+      
+      // Add calculator data as JSON
+      const dataInput = document.createElement('input');
+      dataInput.type = 'hidden';
+      dataInput.name = 'calculator_data';
+      dataInput.value = JSON.stringify(calculatorData);
+      form.appendChild(dataInput);
+      
+      // Submit form
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+    });
+  </script>
+{% endblock %}

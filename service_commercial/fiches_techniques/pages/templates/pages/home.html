@@ -1,0 +1,1051 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} Bariatrix Europe – Recipes Search Engine{% endblock %}
+
+{# ---------- STYLES ---------- #}
+{% block extra_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'pages/home.css' %}">
+
+  <style>
+    #vanta-bg{
+      position:fixed; inset:0;
+      width:100vw; height:100vh;
+      z-index:-1;            /* stay behind everything */
+      pointer-events:none;   /* don’t block clicks */
+    }
+
+    /* keep the hero transparent so the Vanta mesh is visible */
+    .hero{background:transparent!important; margin-top: 100px;}
+    .hero .card{
+      background:rgba(255, 255, 255, 0.95)!important;  
+      backdrop-filter:blur(10px);                   
+      border:1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    .form-label {
+      font-weight: 600;
+      color: #495057;
+    }
+    .input-group-text {
+      background-color: #f8f9fa;
+      border-color: #dee2e6;
+    }
+
+    /* Modern Multi-Select Styles */
+    .multi-select-container {
+      position: relative;
+    }
+
+    .multi-select-input {
+      min-height: 42px;
+      border: 1px solid #dee2e6;
+      border-radius: 0.375rem;
+      padding: 0.5rem;
+      background: white !important;
+      cursor: pointer !important;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+      outline: none;
+    }
+
+    /* Ensure all elements inside multi-select input have pointer cursor */
+    .multi-select-input *:not(.form-control):not(.tag) {
+      background: transparent !important;
+      cursor: pointer !important;
+    }
+    
+    /* Ensure no grey background on any part of the multi-select input */
+    .multi-select-input,
+    .multi-select-input .placeholder,
+    .multi-select-input .dropdown-arrow {
+      background: white !important;
+      background-color: white !important;
+    }
+
+    .multi-select-input .selected-tags {
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+
+    /* Override any browser defaults that might cause loading cursor */
+    .multi-select-container,
+    .multi-select-container *,
+    .multi-select-input,
+    .multi-select-input *,
+    .selected-tags,
+    .selected-tags *,
+    .placeholder,
+    .dropdown-arrow {
+      cursor: pointer !important;
+    }
+
+    /* Exception for form controls inside dropdowns which should have text cursor */
+    .multi-select-dropdown .form-control {
+      cursor: text !important;
+    }
+
+    /* Override any Bootstrap or browser default styling that might cause grey bands */
+    .multi-select-container .multi-select-input {
+      background-image: none !important;
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      appearance: none !important;
+    }
+
+    .multi-select-input:hover {
+      border-color: #950b39;
+    }
+
+    .multi-select-input.active {
+      border-color: #950b39;
+      box-shadow: 0 0 0 0.2rem rgba(149, 11, 57, 0.25);
+    }
+
+    .selected-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      flex: 1;
+    }
+
+    .tag {
+      background: #950b39 !important;
+      background-color: #950b39 !important;
+      color: white !important;
+      padding: 0.25rem 0.5rem;
+      border-radius: 1rem;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .tag .remove {
+      cursor: pointer;
+      font-weight: bold;
+      padding: 0 0.25rem;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .tag .remove:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .placeholder {
+      color: #6c757d;
+      font-size: 1rem;
+      flex: 1;
+      background: transparent !important;
+      border: none;
+      outline: none;
+      cursor: pointer !important;
+    }
+
+    .placeholder.hidden {
+      display: none;
+    }
+
+    .dropdown-arrow {
+      margin-left: auto;
+      transition: transform 0.2s ease;
+      background: transparent !important;
+      color: #6c757d;
+      border: none;
+      outline: none;
+      cursor: pointer !important;
+    }
+
+    .multi-select-input.active .dropdown-arrow {
+      transform: rotate(180deg);
+    }
+
+    .selected-tags {
+      background: transparent !important;
+    }
+
+    .multi-select-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-top: none;
+      border-radius: 0 0 0.375rem 0.375rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      visibility: hidden;
+      opacity: 0;
+      max-height: 300px;
+      overflow: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+
+    .multi-select-dropdown.show {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .search-box {
+      padding: 0.5rem;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .options-container {
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem;
+      cursor: pointer;
+      margin: 0;
+      gap: 0.5rem;
+      transition: background-color 0.2s ease;
+    }
+
+    .option-item:hover {
+      background: #f8f9fa;
+    }
+
+    .option-item input[type="checkbox"] {
+      margin: 0;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: #950b39; /* Modern way to style checkboxes */
+    }
+
+    /* Remove any default checkbox styling and focus outlines that might cause grey bands or blue circles */
+    .option-item input[type="checkbox"]:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    .option-item input[type="checkbox"]:focus-visible {
+      outline: 2px solid #950b39;
+      outline-offset: 2px;
+    }
+
+    .option-item.hidden {
+      display: none;
+    }
+
+    /* Nutritional Unit Toggle Styles */
+    .btn-group .btn-check:checked + .btn-outline-primary {
+      background-color: #950b39;
+      border-color: #950b39;
+      color: white;
+    }
+
+    .btn-group .btn-outline-primary:hover {
+      background-color: #950b39;
+      border-color: #950b39;
+      color: white;
+    }
+
+    .unit-label {
+      font-size: 0.85em;
+      color: #6c757d;
+      font-weight: normal;
+    }
+
+    .nutritional-input {
+      transition: border-color 0.15s ease-in-out;
+    }
+
+    .nutritional-input:focus {
+      border-color: #950b39;
+      box-shadow: 0 0 0 0.2rem rgba(149, 11, 57, 0.25);
+    }
+  </style>
+{% endblock %}
+
+{# ---------- PAGE BODY ---------- #}
+{% block content %}
+  <div id="vanta-bg"></div>     {# Vanta attaches here #}
+
+  <!-- HERO -->
+  <section class="hero py-5">
+    <div class="container">
+      <div class="text-center mb-5">
+        <h1 class="display-5 mb-3">Bariatrix Europe - Recipe Search Engine</h1>
+        <p class="lead mb-4">
+          Find your perfect recipe using our advanced search filters
+        </p>
+      </div>
+
+      <!-- SEARCH FORM -->
+      <div class="card search-form">
+        <div class="card-body">
+          <form method="GET" action="" id="searchForm">
+            <div class="row g-3">
+              
+              <!-- Product ID -->
+              <div class="col-md-6">
+                <label class="form-label">Product ID</label>
+                <div class="multi-select-container">
+                  <div class="multi-select-input" id="product_id_input" onclick="toggleDropdown('product_id')">
+                    <div class="selected-tags" id="product_id_tags"></div>
+                    <span class="placeholder" id="product_id_placeholder">Select Product IDs...</span>
+                    <i class="bi bi-chevron-down dropdown-arrow"></i>
+                  </div>
+                  <div class="multi-select-dropdown" id="product_id_dropdown">
+                    <div class="search-box">
+                      <input type="text" class="form-control form-control-sm" placeholder="Search..." onkeyup="filterOptions('product_id', this.value)">
+                    </div>
+                    <div class="options-container" id="product_id_options">
+                      {% for product_id in filter_options.product_ids %}
+                        <label class="option-item">
+                          <input type="checkbox" name="product_id" value="{{ product_id }}" 
+                                 {% if product_id in query_params.product_id %}checked{% endif %}
+                                 onchange="updateTags('product_id')">
+                          <span>{{ product_id }}</span>
+                        </label>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Product Name -->
+              <div class="col-md-6">
+                <label class="form-label">Product Name</label>
+                <div class="multi-select-container">
+                  <div class="multi-select-input" id="product_name_input" onclick="toggleDropdown('product_name')">
+                    <div class="selected-tags" id="product_name_tags"></div>
+                    <span class="placeholder" id="product_name_placeholder">Select Product Names...</span>
+                    <i class="bi bi-chevron-down dropdown-arrow"></i>
+                  </div>
+                  <div class="multi-select-dropdown" id="product_name_dropdown">
+                    <div class="search-box">
+                      <input type="text" class="form-control form-control-sm" placeholder="Search..." onkeyup="filterOptions('product_name', this.value)">
+                    </div>
+                    <div class="options-container" id="product_name_options">
+                      {% for product_name in filter_options.product_names %}
+                        <label class="option-item">
+                          <input type="checkbox" name="product_name" value="{{ product_name }}" 
+                                 {% if product_name in query_params.product_name %}checked{% endif %}
+                                 onchange="updateTags('product_name')">
+                          <span>{{ product_name }}</span>
+                        </label>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <small class="text-muted">Or search by keyword:</small>
+                  <input type="text" 
+                         class="form-control form-control-sm mt-1" 
+                         name="product_name_keyword" 
+                         placeholder="e.g., wafer, protein, bar..." 
+                         value="{{ query_params.product_name_keyword|default:'' }}">
+                </div>
+              </div>
+
+              <!-- Portion Size -->
+              <div class="col-md-6">
+                <label class="form-label">Portion Size</label>
+                <div class="multi-select-container">
+                  <div class="multi-select-input" id="portion_size_input" onclick="toggleDropdown('portion_size')">
+                    <div class="selected-tags" id="portion_size_tags"></div>
+                    <span class="placeholder" id="portion_size_placeholder">Select Portion Sizes...</span>
+                    <i class="bi bi-chevron-down dropdown-arrow"></i>
+                  </div>
+                  <div class="multi-select-dropdown" id="portion_size_dropdown">
+                    <div class="search-box">
+                      <input type="text" class="form-control form-control-sm" placeholder="Search..." onkeyup="filterOptions('portion_size', this.value)">
+                    </div>
+                    <div class="options-container" id="portion_size_options">
+                      {% for portion_size in filter_options.portion_sizes %}
+                        <label class="option-item">
+                          <input type="checkbox" name="portion_size" value="{{ portion_size }}" 
+                                 {% if portion_size in query_params.portion_size %}checked{% endif %}
+                                 onchange="updateTags('portion_size')">
+                          <span>{{ portion_size }}</span>
+                        </label>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Protein Source -->
+              <div class="col-md-6">
+                <label class="form-label">Protein Source</label>
+                <div class="multi-select-container">
+                  <div class="multi-select-input" id="protein_source_input" onclick="toggleDropdown('protein_source')">
+                    <div class="selected-tags" id="protein_source_tags"></div>
+                    <span class="placeholder" id="protein_source_placeholder">Select Protein Sources...</span>
+                    <i class="bi bi-chevron-down dropdown-arrow"></i>
+                  </div>
+                  <div class="multi-select-dropdown" id="protein_source_dropdown">
+                    <div class="search-box">
+                      <input type="text" class="form-control form-control-sm" placeholder="Search..." onkeyup="filterOptions('protein_source', this.value)">
+                    </div>
+                    <div class="options-container" id="protein_source_options">
+                      {% for protein_source in filter_options.protein_sources %}
+                        <label class="option-item">
+                          <input type="checkbox" name="protein_source" value="{{ protein_source }}" 
+                                 {% if protein_source in query_params.protein_source %}checked{% endif %}
+                                 onchange="updateTags('protein_source')">
+                          <span>{{ protein_source }}</span>
+                        </label>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <small class="text-muted">Or search by keyword:</small>
+                  <input type="text" 
+                         class="form-control form-control-sm mt-1" 
+                         name="protein_source_keyword" 
+                         placeholder="e.g., milk, soy, whey..." 
+                         value="{{ query_params.protein_source_keyword|default:'' }}">
+                </div>
+              </div>
+
+              <!-- Ingredients -->
+              <div class="col-md-6">
+                <label class="form-label">Ingredients <span class="text-success">(Contains)</span></label>
+                <div class="multi-select-container">
+                  <div class="multi-select-input" id="ingredients_input" onclick="toggleDropdown('ingredients')">
+                    <div class="selected-tags" id="ingredients_tags"></div>
+                    <span class="placeholder" id="ingredients_placeholder">Select Ingredients...</span>
+                    <i class="bi bi-chevron-down dropdown-arrow"></i>
+                  </div>
+                  <div class="multi-select-dropdown" id="ingredients_dropdown">
+                    <div class="search-box">
+                      <input type="text" class="form-control form-control-sm" placeholder="Search..." onkeyup="filterOptions('ingredients', this.value)">
+                    </div>
+                    <div class="options-container" id="ingredients_options">
+                      {% for ingredient in filter_options.ingredients %}
+                        <label class="option-item">
+                          <input type="checkbox" name="ingredients" value="{{ ingredient }}" 
+                                 {% if ingredient in query_params.ingredients %}checked{% endif %}
+                                 onchange="updateTags('ingredients')">
+                          <span>{{ ingredient }}</span>
+                        </label>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <small class="text-muted">Or search by keyword:</small>
+                  <input type="text" 
+                         class="form-control form-control-sm mt-1" 
+                         name="ingredients_keyword" 
+                         placeholder="e.g., chocolate, vanilla, sugar..." 
+                         value="{{ query_params.ingredients_keyword|default:'' }}">
+                </div>
+              </div>
+
+              <!-- Ingredients Exclusion -->
+              <div class="col-md-6">
+                <label class="form-label">Ingredients <span class="text-danger">(Exclude)</span></label>
+                <div class="multi-select-container">
+                  <div class="multi-select-input" id="ingredients_exclude_input" onclick="toggleDropdown('ingredients_exclude')">
+                    <div class="selected-tags" id="ingredients_exclude_tags"></div>
+                    <span class="placeholder" id="ingredients_exclude_placeholder">Select Ingredients to Exclude...</span>
+                    <i class="bi bi-chevron-down dropdown-arrow"></i>
+                  </div>
+                  <div class="multi-select-dropdown" id="ingredients_exclude_dropdown">
+                    <div class="search-box">
+                      <input type="text" class="form-control form-control-sm" placeholder="Search..." onkeyup="filterOptions('ingredients_exclude', this.value)">
+                    </div>
+                    <div class="options-container" id="ingredients_exclude_options">
+                      {% for ingredient in filter_options.ingredients %}
+                        <label class="option-item">
+                          <input type="checkbox" name="ingredients_exclude" value="{{ ingredient }}" 
+                                 {% if ingredient in query_params.ingredients_exclude %}checked{% endif %}
+                                 onchange="updateTags('ingredients_exclude')">
+                          <span>{{ ingredient }}</span>
+                        </label>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <small class="text-muted">Products that do not contain these ingredients</small>
+                </div>
+              </div>
+
+              <!-- Allergens -->
+              <div class="col-md-6">
+                <label class="form-label">Allergens</label>
+                <div class="multi-select-container">
+                  <div class="multi-select-input" id="allergens_input" onclick="toggleDropdown('allergens')">
+                    <div class="selected-tags" id="allergens_tags"></div>
+                    <span class="placeholder" id="allergens_placeholder">Select Allergens...</span>
+                    <i class="bi bi-chevron-down dropdown-arrow"></i>
+                  </div>
+                  <div class="multi-select-dropdown" id="allergens_dropdown">
+                    <div class="search-box">
+                      <input type="text" class="form-control form-control-sm" placeholder="Search..." onkeyup="filterOptions('allergens', this.value)">
+                    </div>
+                    <div class="options-container" id="allergens_options">
+                      {% for allergen in filter_options.allergens %}
+                        <label class="option-item">
+                          <input type="checkbox" name="allergens" value="{{ allergen }}" 
+                                 {% if allergen in query_params.allergens %}checked{% endif %}
+                                 onchange="updateTags('allergens')">
+                          <span>{{ allergen }}</span>
+                        </label>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <small class="text-muted">Or search by keyword:</small>
+                  <input type="text" 
+                         class="form-control form-control-sm mt-1" 
+                         name="allergens_keyword" 
+                         placeholder="e.g., milk, gluten, nuts..." 
+                         value="{{ query_params.allergens_keyword|default:'' }}">
+                </div>
+              </div>
+
+              <!-- Tags -->
+              <div class="col-12">
+                <label class="form-label">Tags</label>
+                <div class="multi-select-container">
+                  <div class="multi-select-input" id="tags_input" onclick="toggleDropdown('tags')">
+                    <div class="selected-tags" id="tags_tags"></div>
+                    <span class="placeholder" id="tags_placeholder">Select Tags...</span>
+                    <i class="bi bi-chevron-down dropdown-arrow"></i>
+                  </div>
+                  <div class="multi-select-dropdown" id="tags_dropdown">
+                    <div class="search-box">
+                      <input type="text" class="form-control form-control-sm" placeholder="Search..." onkeyup="filterOptions('tags', this.value)">
+                    </div>
+                    <div class="options-container" id="tags_options">
+                      {% for tag in filter_options.tags %}
+                        <label class="option-item">
+                          <input type="checkbox" name="tags" value="{{ tag }}" 
+                                 {% if tag in query_params.tags %}checked{% endif %}
+                                 onchange="updateTags('tags')">
+                          <span>{{ tag }}</span>
+                        </label>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <div class="nutritional-section">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">
+                      <i class="bi bi-speedometer2 me-2"></i>Nutritional Values
+                      <i class="bi bi-question-circle ms-2 text-muted" 
+                         data-bs-toggle="tooltip" 
+                         data-bs-placement="top" 
+                         title="Toggle between nutritional values per 100g (database values) or estimated values per portion size"
+                         style="font-size: 0.9rem; cursor: help;"></i>
+                    </h6>
+                    <div class="btn-group" role="group" aria-label="Nutritional unit toggle">
+                      <input type="radio" class="btn-check" name="nutritional_unit" id="unit_100g" value="100g" checked>
+                      <label class="btn btn-outline-primary btn-sm" for="unit_100g">
+                        <i class="bi bi-clipboard-data me-1"></i>Per 100g
+                      </label>
+                      
+                      <input type="radio" class="btn-check" name="nutritional_unit" id="unit_portion" value="portion">
+                      <label class="btn btn-outline-primary btn-sm" for="unit_portion">
+                        <i class="bi bi-box me-1"></i>Per Portion
+                      </label>
+                    </div>
+                  </div>
+                  <div class="row g-3">
+                    
+                    <!-- First Column -->
+                    <div class="col-md-6">
+                      <div class="row g-3">
+                        <div class="col-12">
+                          <label for="kcal_100g" class="form-label">
+                            Calories 
+                            <span class="unit-label">(kcal per 100g)</span>
+                          </label>
+                          <div class="input-group">
+                            <input type="number" class="form-control nutritional-input" id="kcal_100g_min" name="kcal_100g_min" placeholder="Min" value="{{ query_params.kcal_100g_min|default:'' }}">
+                            <span class="input-group-text">-</span>
+                            <input type="number" class="form-control nutritional-input" id="kcal_100g_max" name="kcal_100g_max" placeholder="Max" value="{{ query_params.kcal_100g_max|default:'' }}">
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <label for="kj_100g" class="form-label">
+                            Energy 
+                            <span class="unit-label">(kJ per 100g)</span>
+                          </label>
+                          <div class="input-group">
+                            <input type="number" class="form-control nutritional-input" id="kj_100g_min" name="kj_100g_min" placeholder="Min" value="{{ query_params.kj_100g_min|default:'' }}">
+                            <span class="input-group-text">-</span>
+                            <input type="number" class="form-control nutritional-input" id="kj_100g_max" name="kj_100g_max" placeholder="Max" value="{{ query_params.kj_100g_max|default:'' }}">
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <label for="matieres_grasses_100g" class="form-label">
+                            Fats 
+                            <span class="unit-label">(g per 100g)</span>
+                          </label>
+                          <div class="input-group">
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="matieres_grasses_100g_min" name="matieres_grasses_100g_min" placeholder="Min">
+                            <span class="input-group-text">-</span>
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="matieres_grasses_100g_max" name="matieres_grasses_100g_max" placeholder="Max">
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <label for="lipides_100g" class="form-label">
+                            Lipids 
+                            <span class="unit-label">(g per 100g)</span>
+                          </label>
+                          <div class="input-group">
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="lipides_100g_min" name="lipides_100g_min" placeholder="Min">
+                            <span class="input-group-text">-</span>
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="lipides_100g_max" name="lipides_100g_max" placeholder="Max">
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <label for="acides_gras_satures_100g" class="form-label">
+                            Saturated Fats 
+                            <span class="unit-label">(g per 100g)</span>
+                          </label>
+                          <div class="input-group">
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="acides_gras_satures_100g_min" name="acides_gras_satures_100g_min" placeholder="Min">
+                            <span class="input-group-text">-</span>
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="acides_gras_satures_100g_max" name="acides_gras_satures_100g_max" placeholder="Max">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Second Column -->
+                    <div class="col-md-6">
+                      <div class="row g-3">
+                        <div class="col-12">
+                          <label for="glucides_100g" class="form-label">
+                            Glucides 
+                            <span class="unit-label">(g per 100g)</span>
+                          </label>
+                          <div class="input-group">
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="glucides_100g_min" name="glucides_100g_min" placeholder="Min">
+                            <span class="input-group-text">-</span>
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="glucides_100g_max" name="glucides_100g_max" placeholder="Max">
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <label for="sucres_100g" class="form-label">
+                            dont sucres 
+                            <span class="unit-label">(g per 100g)</span>
+                          </label>
+                          <div class="input-group">
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="sucres_100g_min" name="sucres_100g_min" placeholder="Min">
+                            <span class="input-group-text">-</span>
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="sucres_100g_max" name="sucres_100g_max" placeholder="Max">
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <label for="amidon_100g" class="form-label">
+                            dont amidon 
+                            <span class="unit-label">(g per 100g)</span>
+                          </label>
+                          <div class="input-group">
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="amidon_100g_min" name="amidon_100g_min" placeholder="Min">
+                            <span class="input-group-text">-</span>
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="amidon_100g_max" name="amidon_100g_max" placeholder="Max">
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <label for="fibres_100g" class="form-label">
+                            Fibres alimentaires 
+                            <span class="unit-label">(g per 100g)</span>
+                          </label>
+                          <div class="input-group">
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="fibres_100g_min" name="fibres_100g_min" placeholder="Min">
+                            <span class="input-group-text">-</span>
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="fibres_100g_max" name="fibres_100g_max" placeholder="Max">
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <label for="proteines_100g" class="form-label">
+                            Proteins 
+                            <span class="unit-label">(g per 100g)</span>
+                          </label>
+                          <div class="input-group">
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="proteines_100g_min" name="proteines_100g_min" placeholder="Min">
+                            <span class="input-group-text">-</span>
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="proteines_100g_max" name="proteines_100g_max" placeholder="Max">
+                          </div>
+                        </div>
+
+                        <div class="col-12">
+                          <label for="sel_100g" class="form-label">
+                            Sel 
+                            <span class="unit-label">(g per 100g)</span>
+                          </label>
+                          <div class="input-group">
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="sel_100g_min" name="sel_100g_min" placeholder="Min">
+                            <span class="input-group-text">-</span>
+                            <input type="number" step="0.1" class="form-control nutritional-input" id="sel_100g_max" name="sel_100g_max" placeholder="Max">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                  </div>
+                </div>
+              </div>
+
+              <!-- Search Button -->
+              <div class="col-12 text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg px-5">
+                  <i class="bi bi-search"></i> Search Recipes
+                </button>
+                <button type="reset" class="btn btn-outline-secondary btn-lg px-4 ms-3">
+                  <i class="bi bi-arrow-clockwise"></i> Reset
+                </button>
+              </div>
+
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATISTICS SECTION -->
+  <section class="stats py-5 bg-light">
+    <div class="container">
+      <div class="text-center">
+        <h3 class="mb-4">Recipe Database Statistics</h3>
+        <div class="row">
+          <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body text-center">
+                <i class="bi bi-journal-text display-4 text-primary mb-3"></i>
+                <h4 class="text-primary">{{ total_recipes }}</h4>
+                <p class="text-muted">Total Recipes</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body text-center">
+                <i class="bi bi-search display-4 text-success mb-3"></i>
+                <h4 class="text-success">Advanced</h4>
+                <p class="text-muted">Search Filters</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body text-center">
+                <i class="bi bi-graph-up display-4 text-info mb-3"></i>
+                <h4 class="text-info">Nutritional</h4>
+                <p class="text-muted">Analysis</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MESSAGES -->
+  {% if messages %}
+  <div class="container mb-4">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endblock %}
+
+{# ---------- SCRIPTS ---------- #}
+{% block extra_js %}
+  {{ block.super }}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      VANTA.NET({
+        el: '#vanta-bg',
+
+        /* ---- general controls ---- */
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        scale: 1.0,
+        scaleMobile: 1.0,
+
+        /* ---- finance-flavoured colour palette ---- */
+        color: 0x950b39,          // nodes & lines → 
+        backgroundAlpha: 0.0,     // FULLY transparent canvas
+        /* optional: give dots a bit more “data point” feel */
+        points: 10.0,             // default 12
+        maxDistance: 22.0,        // tighter network
+      });
+      
+      // Handle reset button
+      const resetBtn = document.querySelector('button[type="reset"]');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          // Reset all form elements
+          const form = this.closest('form');
+          form.reset();
+          // Reset multi-select components
+          ['product_id', 'product_name', 'portion_size', 'protein_source', 'ingredients', 'ingredients_exclude', 'allergens', 'tags'].forEach(fieldName => {
+            updateTags(fieldName);
+          });
+          // Redirect to the same page without any query parameters
+          window.location.href = window.location.pathname;
+        });
+      }
+
+      // Initialize multi-select components with a small delay to ensure DOM is ready
+      setTimeout(() => {
+        ['product_id', 'product_name', 'portion_size', 'protein_source', 'ingredients', 'ingredients_exclude', 'allergens', 'tags'].forEach(fieldName => {
+          updateTags(fieldName);
+        });
+      }, 100);
+
+      // Initialize nutritional unit toggle functionality
+      initializeNutritionalToggle();
+
+      // Initialize Bootstrap tooltips
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    });
+
+    // Multi-select functionality
+    function toggleDropdown(fieldName) {
+      const input = document.getElementById(fieldName + '_input');
+      const dropdown = document.getElementById(fieldName + '_dropdown');
+      
+      // Close all other dropdowns first
+      document.querySelectorAll('.multi-select-dropdown').forEach(dd => {
+        if (dd.id !== fieldName + '_dropdown') {
+          dd.classList.remove('show');
+        }
+      });
+      
+      document.querySelectorAll('.multi-select-input').forEach(inp => {
+        if (inp.id !== fieldName + '_input') {
+          inp.classList.remove('active');
+        }
+      });
+      
+      // Toggle current dropdown
+      dropdown.classList.toggle('show');
+      input.classList.toggle('active');
+      
+      // Focus search box when dropdown opens
+      if (dropdown.classList.contains('show')) {
+        const searchBox = dropdown.querySelector('input[type="text"]');
+        setTimeout(() => searchBox.focus(), 100);
+      }
+    }
+
+    function updateTags(fieldName) {
+      const checkboxes = document.querySelectorAll(`input[name="${fieldName}"]:checked`);
+      const tagsContainer = document.getElementById(fieldName + '_tags');
+      const placeholder = document.getElementById(fieldName + '_placeholder');
+      
+      // Debug logging
+      console.log(`updateTags called for ${fieldName}:`, {
+        checkboxes: checkboxes.length,
+        tagsContainer: !!tagsContainer,
+        placeholder: !!placeholder
+      });
+      
+      if (!tagsContainer || !placeholder) {
+        console.error(`Missing elements for ${fieldName}`);
+        return;
+      }
+      
+      tagsContainer.innerHTML = '';
+      
+      if (checkboxes.length > 0) {
+        placeholder.classList.add('hidden');
+        checkboxes.forEach(checkbox => {
+          const tag = document.createElement('span');
+          tag.className = 'tag';
+          tag.innerHTML = `
+            ${checkbox.value}
+            <span class="remove" onclick="removeTag('${fieldName}', '${checkbox.value}')">&times;</span>
+          `;
+          tagsContainer.appendChild(tag);
+          console.log(`Added tag for ${fieldName}:`, checkbox.value);
+        });
+      } else {
+        placeholder.classList.remove('hidden');
+      }
+    }
+
+    function removeTag(fieldName, value) {
+      const checkbox = document.querySelector(`input[name="${fieldName}"][value="${value}"]`);
+      if (checkbox) {
+        checkbox.checked = false;
+        updateTags(fieldName);
+      }
+    }
+
+    function filterOptions(fieldName, searchTerm) {
+      const options = document.querySelectorAll(`#${fieldName}_options .option-item`);
+      searchTerm = searchTerm.toLowerCase();
+      
+      options.forEach(option => {
+        const text = option.querySelector('span').textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+          option.classList.remove('hidden');
+        } else {
+          option.classList.add('hidden');
+        }
+      });
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.multi-select-container')) {
+        document.querySelectorAll('.multi-select-dropdown').forEach(dropdown => {
+          dropdown.classList.remove('show');
+        });
+        document.querySelectorAll('.multi-select-input').forEach(input => {
+          input.classList.remove('active');
+        });
+      }
+    });
+
+    // Handle form submission to ensure all multi-select values are included
+    document.getElementById('searchForm').addEventListener('submit', function(e) {
+      // Remove any existing hidden inputs for multi-select fields
+      const existingHiddenInputs = this.querySelectorAll('input[type="hidden"][data-multiselect="true"]');
+      existingHiddenInputs.forEach(input => input.remove());
+
+      // For each multi-select field, create hidden inputs for all checked values
+      ['product_id', 'product_name', 'portion_size', 'protein_source', 'ingredients', 'ingredients_exclude', 'allergens', 'tags'].forEach(fieldName => {
+        const checkedBoxes = document.querySelectorAll(`input[name="${fieldName}"]:checked`);
+        checkedBoxes.forEach(checkbox => {
+          const hiddenInput = document.createElement('input');
+          hiddenInput.type = 'hidden';
+          hiddenInput.name = fieldName;
+          hiddenInput.value = checkbox.value;
+          hiddenInput.setAttribute('data-multiselect', 'true');
+          this.appendChild(hiddenInput);
+        });
+      });
+    });
+
+    // Nutritional unit toggle functionality
+    function initializeNutritionalToggle() {
+      const unit100gRadio = document.getElementById('unit_100g');
+      const unitPortionRadio = document.getElementById('unit_portion');
+      
+      // Add event listeners to radio buttons
+      unit100gRadio.addEventListener('change', () => updateNutritionalUnits('100g'));
+      unitPortionRadio.addEventListener('change', () => updateNutritionalUnits('portion'));
+      
+      // Set initial state
+      updateNutritionalUnits('100g');
+    }
+
+    function updateNutritionalUnits(unit) {
+      const unitLabels = document.querySelectorAll('.unit-label');
+      const nutritionalInputs = document.querySelectorAll('.nutritional-input');
+      
+      unitLabels.forEach(label => {
+        const parentLabel = label.closest('.form-label');
+        const nutrientName = parentLabel.textContent.trim().split(' ')[0]; // Get first word (Calories, Proteins, etc.)
+        
+        if (unit === '100g') {
+          if (nutrientName === 'Calories') {
+            label.textContent = '(kcal per 100g)';
+          } else if (nutrientName === 'Energy') {
+            label.textContent = '(kJ per 100g)';
+          } else {
+            label.textContent = '(g per 100g)';
+          }
+        } else {
+          if (nutrientName === 'Calories') {
+            label.textContent = '(kcal per portion)';
+          } else if (nutrientName === 'Energy') {
+            label.textContent = '(kJ per portion)';
+          } else {
+            label.textContent = '(g per portion)';
+          }
+        }
+      });
+
+      // Add visual feedback for unit change
+      nutritionalInputs.forEach(input => {
+        input.style.borderColor = unit === 'portion' ? '#ffc107' : '#dee2e6';
+        
+        // Add placeholder text hint for portion mode
+        if (unit === 'portion') {
+          const currentPlaceholder = input.getAttribute('placeholder');
+          if (currentPlaceholder && !currentPlaceholder.includes('(estimated)')) {
+            input.setAttribute('placeholder', currentPlaceholder + ' (estimated)');
+          }
+        } else {
+          const currentPlaceholder = input.getAttribute('placeholder');
+          if (currentPlaceholder && currentPlaceholder.includes('(estimated)')) {
+            input.setAttribute('placeholder', currentPlaceholder.replace(' (estimated)', ''));
+          }
+        }
+      });
+
+      // Show info message about portion calculations
+      showNutritionalUnitInfo(unit);
+    }
+
+    function showNutritionalUnitInfo(unit) {
+      // Remove any existing info messages
+      const existingInfo = document.querySelector('.nutritional-unit-info');
+      if (existingInfo) {
+        existingInfo.remove();
+      }
+
+      if (unit === 'portion') {
+        // Create info message for portion mode
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'alert alert-info nutritional-unit-info mt-2';
+        infoDiv.innerHTML = `
+          <i class="bi bi-info-circle me-2"></i>
+          <strong>Per Portion Mode:</strong> Labels show "per portion" for reference, but filtering uses per-100g values. 
+          Use this mode to think in portion terms while entering filter values.
+        `;
+        
+        // Insert after the nutritional values header
+        const nutritionalSection = document.querySelector('.nutritional-section');
+        if (nutritionalSection) {
+          const headerDiv = nutritionalSection.querySelector('.d-flex');
+          if (headerDiv) {
+            headerDiv.parentNode.insertBefore(infoDiv, headerDiv.nextSibling);
+          }
+        }
+      }
+    }
+  </script>
+{% endblock %}

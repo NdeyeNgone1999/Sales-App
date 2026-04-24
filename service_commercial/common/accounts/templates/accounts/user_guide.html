@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management Guide - Bariatrix{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>User Management System</h1>
+            <p class="lead">Complete guide to the Bariatrix user management and role-based access control system.</p>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4><i class="bi bi-people"></i> User Management</h4>
+                        </div>
+                        <div class="card-body">
+                            <h6>Features:</h6>
+                            <ul>
+                                <li>User registration and authentication</li>
+                                <li>Profile management</li>
+                                <li>Role assignment</li>
+                                <li>User activation/deactivation</li>
+                                <li>User search and filtering</li>
+                            </ul>
+                            
+                            <h6>Access:</h6>
+                            <p>Available to users with <span class="badge bg-danger">Administrator</span> role.</p>
+                            
+                            {% if is_admin %}
+                            <a href="{% url 'accounts:user_list' %}" class="btn btn-primary btn-sm">Manage Users</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4><i class="bi bi-shield"></i> Role Management</h4>
+                        </div>
+                        <div class="card-body">
+                            <h6>Available Roles:</h6>
+                            <ul>
+                                <li><span class="badge bg-danger">Administrator</span> - Full system access</li>
+                                <li><span class="badge bg-warning">Manager</span> - Content management</li>
+                                <li><span class="badge bg-success">Editor</span> - Content editing</li>
+                                <li><span class="badge bg-secondary">Viewer</span> - Read-only access</li>
+                            </ul>
+                            
+                            <h6>Access:</h6>
+                            <p>Available to users with <span class="badge bg-danger">Administrator</span> role.</p>
+                            
+                            {% if is_admin %}
+                            <a href="{% url 'accounts:role_list' %}" class="btn btn-primary btn-sm">Manage Roles</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4><i class="bi bi-person"></i> User Guide</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h6>Getting Started</h6>
+                                    <ol>
+                                        <li>Register a new account</li>
+                                        <li>Complete your profile</li>
+                                        <li>Wait for role assignment</li>
+                                        <li>Start using the system</li>
+                                    </ol>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <h6>Profile Management</h6>
+                                    <ul>
+                                        <li>Update personal information</li>
+                                        <li>Change contact details</li>
+                                        <li>View account status</li>
+                                        <li>Check assigned role</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <h6>Security</h6>
+                                    <ul>
+                                        <li>Secure password requirements</li>
+                                        <li>Role-based access control</li>
+                                        <li>Session management</li>
+                                        <li>Activity logging</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4><i class="bi bi-question-circle"></i> Demo Account</h4>
+                        </div>
+                        <div class="card-body">
+                            <p>For testing purposes, a demo administrator account has been created:</p>
+                            <div class="alert alert-info">
+                                <strong>Username:</strong> admin<br>
+                                <strong>Password:</strong> admin123<br>
+                                <strong>Role:</strong> Administrator
+                            </div>
+                            <p class="text-muted small">
+                                <strong>Note:</strong> Please change the password and create your own admin account for production use.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

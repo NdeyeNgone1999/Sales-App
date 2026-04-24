@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}User Details - Bariatrix{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>User Details</h2>
+        <div>
+            <a href="{% url 'accounts:edit_user' user_obj.id %}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Edit User
+            </a>
+            <a href="{% url 'accounts:change_password' user_obj.id %}" class="btn btn-warning">
+                <i class="bi bi-key"></i> Changer le mot de passe
+            </a>
+            <a href="{% url 'accounts:user_list' %}" class="btn btn-secondary">Back to List</a>
+            {% if request.user.is_staff and user_obj != request.user %}
+                <a href="{% url 'accounts:delete_user' user_obj.id %}" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> Delete User
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>{{ user_obj.username }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>First Name:</strong>
+                            <p>{{ user_obj.first_name|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Last Name:</strong>
+                            <p>{{ user_obj.last_name|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Email:</strong>
+                            <p>{{ user_obj.email|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Phone Number:</strong>
+                            <p>{{ user_obj.profile.phone_number|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Department:</strong>
+                            <p>{{ user_obj.profile.department|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Role:</strong>
+                            <p>
+                                {% if user_obj.profile.role %}
+                                    <span class="badge bg-info">{{ user_obj.profile.role }}</span>
+                                {% else %}
+                                    No role assigned
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Date Joined:</strong>
+                            <p>{{ user_obj.date_joined|date:"F d, Y g:i A" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Last Login:</strong>
+                            <p>{{ user_obj.last_login|date:"F d, Y g:i A"|default:"Never" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Account Status</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Active:</strong>
+                        {% if user_obj.is_active %}
+                            <span class="badge bg-success">Yes</span>
+                        {% else %}
+                            <span class="badge bg-danger">No</span>
+                        {% endif %}
+                    </p>
+                    
+                    <p><strong>Staff:</strong>
+                        {% if user_obj.is_staff %}
+                            <span class="badge bg-info">Yes</span>
+                        {% else %}
+                            <span class="badge bg-secondary">No</span>
+                        {% endif %}
+                    </p>
+                    
+                    <p><strong>Superuser:</strong>
+                        {% if user_obj.is_superuser %}
+                            <span class="badge bg-warning">Yes</span>
+                        {% else %}
+                            <span class="badge bg-secondary">No</span>
+                        {% endif %}
+                    </p>
+                    
+                    <hr>
+                    
+                    <form method="post" action="{% url 'accounts:toggle_user_status' user_obj.id %}">
+                        {% csrf_token %}
+                        {% if user_obj.is_active %}
+                            <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('Are you sure you want to deactivate this user?')">
+                                Deactivate User
+                            </button>
+                        {% else %}
+                            <button type="submit" class="btn btn-success btn-sm">
+                                Activate User
+                            </button>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,157 @@
+/* ==========================================
+   DESIGN SYSTEM - CSS Custom Properties
+   Light/Dark Mode + Shared Tokens
+   ========================================== */
+
+:root {
+    /* === Typography === */
+    --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+    /* === Light Mode (default) === */
+    --bg-primary: #fffaf6;
+    --bg-secondary: #f8f1ea;
+    --bg-tertiary: #f1e4da;
+    --bg-elevated: #fffdf9;
+    --bg-inset: #ead9cd;
+
+    --text-primary: #241917;
+    --text-secondary: #6a504a;
+    --text-muted: #a17d72;
+    --text-inverse: #ffffff;
+
+    --border-default: #e8d7cb;
+    --border-hover: #d8beb1;
+    --border-focus: #950b39;
+
+    --accent: #950b39;
+    --accent-hover: #76082d;
+    --accent-light: #f5dbe5;
+    --accent-subtle: #fcf1f5;
+
+    --success: #2d8a6c;
+    --success-light: #d8eee6;
+    --warning: #cf8b2f;
+    --warning-light: #f7ead2;
+    --danger: #c14b56;
+    --danger-light: #f6dadd;
+    --info: #c46b42;
+    --info-light: #f5e0d5;
+
+    --card-bg: rgba(255, 252, 249, 0.92);
+    --card-border: #ead7cb;
+    --card-shadow: 0 10px 30px rgba(69, 33, 28, 0.08);
+    --card-shadow-hover: 0 18px 38px rgba(69, 33, 28, 0.12);
+
+    --nav-bg: rgba(255, 248, 242, 0.88);
+    --nav-border: #e5d2c7;
+
+    --input-bg: #fffdfa;
+    --input-border: #d7bfb3;
+    --input-focus-ring: rgba(149, 11, 57, 0.18);
+
+    --table-header-bg: #f6ece5;
+    --table-row-hover: #fbf3ee;
+    --table-border: #ead7cb;
+
+    --badge-bg: #f2e3db;
+    --badge-text: #5f433d;
+
+    --kpi-1: #950b39;
+    --kpi-2: #2d8a6c;
+    --kpi-3: #c46b42;
+    --kpi-4: #cf8b2f;
+    --kpi-5: #c14b56;
+    --kpi-6: #7a4f67;
+
+    /* Plotly theme tokens */
+    --plotly-bg: rgba(248, 241, 234, 1);
+    --plotly-paper: rgba(255, 255, 255, 0);
+    --plotly-text: #5f433d;
+    --plotly-grid: #ead7cb;
+
+    /* Scrollbar */
+    --scrollbar-track: #f1e4da;
+    --scrollbar-thumb: #d2b5aa;
+    --scrollbar-thumb-hover: #a17d72;
+
+    /* Radius scale */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-2xl: 1.25rem;
+    --radius-full: 9999px;
+
+    /* Transition */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === Dark Mode === */
+.dark {
+    --bg-primary: #241517;
+    --bg-secondary: #311d20;
+    --bg-tertiary: #46282b;
+    --bg-elevated: #382123;
+    --bg-inset: #201214;
+
+    --text-primary: #fdf4ee;
+    --text-secondary: #d9bdb2;
+    --text-muted: #b78f88;
+    --text-inverse: #241517;
+
+    --border-default: #5a3539;
+    --border-hover: #73484d;
+    --border-focus: #ef88a8;
+
+    --accent: #ef88a8;
+    --accent-hover: #f6a2bc;
+    --accent-light: rgba(239, 136, 168, 0.16);
+    --accent-subtle: rgba(239, 136, 168, 0.08);
+
+    --success: #62c6a7;
+    --success-light: rgba(98, 198, 167, 0.15);
+    --warning: #f1bf72;
+    --warning-light: rgba(241, 191, 114, 0.15);
+    --danger: #f08f98;
+    --danger-light: rgba(240, 143, 152, 0.15);
+    --info: #efae8e;
+    --info-light: rgba(239, 174, 142, 0.15);
+
+    --card-bg: #382123;
+    --card-border: #5a3539;
+    --card-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+    --card-shadow-hover: 0 16px 40px rgba(0, 0, 0, 0.32);
+
+    --nav-bg: rgba(36, 21, 23, 0.86);
+    --nav-border: #5a3539;
+
+    --input-bg: #311d20;
+    --input-border: #73484d;
+    --input-focus-ring: rgba(239, 136, 168, 0.22);
+
+    --table-header-bg: #422629;
+    --table-row-hover: rgba(90, 53, 57, 0.35);
+    --table-border: #5a3539;
+
+    --badge-bg: #5a3539;
+    --badge-text: #f9ded5;
+
+    --kpi-1: #ef88a8;
+    --kpi-2: #62c6a7;
+    --kpi-3: #efae8e;
+    --kpi-4: #f1bf72;
+    --kpi-5: #f08f98;
+    --kpi-6: #d6a7be;
+
+    --plotly-bg: rgba(49, 29, 32, 1);
+    --plotly-paper: rgba(0, 0, 0, 0);
+    --plotly-text: #f9ded5;
+    --plotly-grid: #5a3539;
+
+    --scrollbar-track: #311d20;
+    --scrollbar-thumb: #73484d;
+    --scrollbar-thumb-hover: #b78f88;
+}

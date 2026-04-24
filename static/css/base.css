@@ -1,0 +1,11 @@
+body { display: flex; flex-direction: column; min-height: 100vh; }
+main { flex: 1; padding-top: 70px; }      /* leave room for fixed-top navbar */
+.logo { 
+  max-width: 180px; 
+  transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
+}
+.navbar-brand:hover .logo {
+  transform: scale(1.05);
+  opacity: 0.8;
+}
+footer a { margin: 0 .5rem; color: #6c757d; text-decoration: none; }

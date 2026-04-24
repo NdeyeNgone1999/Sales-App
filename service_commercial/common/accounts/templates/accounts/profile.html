@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - Bariatrix{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3>My Profile</h3>
+                    <a href="{% url 'accounts:edit_profile' %}" class="btn btn-primary">Edit Profile</a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Username:</strong>
+                            <p>{{ user.username }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Email:</strong>
+                            <p>{{ user.email|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>First Name:</strong>
+                            <p>{{ user.first_name|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Last Name:</strong>
+                            <p>{{ user.last_name|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Phone Number:</strong>
+                            <p>{{ profile.phone_number|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Department:</strong>
+                            <p>{{ profile.department|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Role:</strong>
+                            <p>{{ profile.role|default:"No role assigned" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Member Since:</strong>
+                            <p>{{ user.date_joined|date:"F d, Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Account Status</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Status:</strong> 
+                        {% if user.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                        {% endif %}
+                    </p>
+                    
+                    {% if user.is_staff %}
+                        <p><strong>Staff Member:</strong> <span class="badge bg-info">Yes</span></p>
+                    {% endif %}
+                    
+                    {% if user.is_superuser %}
+                        <p><strong>Superuser:</strong> <span class="badge bg-warning">Yes</span></p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if is_admin %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>Admin Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'accounts:user_list' %}" class="btn btn-sm btn-outline-primary mb-2">Manage Users</a><br>
+                    <a href="{% url 'accounts:role_list' %}" class="btn btn-sm btn-outline-primary mb-2">Manage Roles</a><br>
+                    <a href="{% url 'admin:index' %}" class="btn btn-sm btn-outline-secondary">Django Admin</a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Delete User - {{ user_obj.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .danger-zone {
+        border: 2px solid #dc3545;
+        border-radius: 8px;
+        background-color: #f8d7da;
+        padding: 2rem;
+    }
+    .user-info-card {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .warning-icon {
+        color: #dc3545;
+        font-size: 3rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'accounts:user_detail' user_obj.id %}" class="btn btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+                <h2 class="mb-0">Delete User Account</h2>
+            </div>
+
+            <!-- User Information Card -->
+            <div class="user-info-card">
+                <h4><i class="bi bi-person"></i> User Information</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Username:</strong> {{ user_obj.username }}</p>
+                        <p><strong>Email:</strong> {{ user_obj.email }}</p>
+                        <p><strong>First Name:</strong> {{ user_obj.first_name|default:"Not provided" }}</p>
+                        <p><strong>Last Name:</strong> {{ user_obj.last_name|default:"Not provided" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Date Joined:</strong> {{ user_obj.date_joined|date:"M d, Y H:i" }}</p>
+                        <p><strong>Last Login:</strong> {{ user_obj.last_login|date:"M d, Y H:i"|default:"Never" }}</p>
+                        <p><strong>Staff Status:</strong> 
+                            {% if user_obj.is_staff %}
+                                <span class="badge bg-warning">Staff</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Regular User</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Active:</strong> 
+                            {% if user_obj.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                {% if user_obj.profile %}
+                    <hr>
+                    <h5>Profile Information</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Role:</strong> {{ user_obj.profile.role|default:"No role assigned" }}</p>
+                            <p><strong>Department:</strong> {{ user_obj.profile.department|default:"Not specified" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Phone:</strong> {{ user_obj.profile.phone_number|default:"Not provided" }}</p>
+                            <p><strong>Approval Status:</strong> 
+                                {% if user_obj.profile.approval_status == 'approved' %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% elif user_obj.profile.approval_status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% elif user_obj.profile.approval_status == 'rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="danger-zone text-center">
+                <div class="mb-3">
+                    <i class="bi bi-exclamation-triangle warning-icon"></i>
+                </div>
+                <h3 class="text-danger mb-3">⚠️ Danger Zone</h3>
+                <h5 class="mb-3">You are about to permanently delete this user account</h5>
+                
+                <div class="alert alert-danger mb-4">
+                    <h6><strong>This action cannot be undone!</strong></h6>
+                    <ul class="list-unstyled mb-0">
+                        <li>• The user account will be permanently deleted</li>
+                        <li>• All associated data and permissions will be removed</li>
+                        <li>• The user will lose access to the system immediately</li>
+                        <li>• Any recipes or content created by this user will remain</li>
+                    </ul>
+                </div>
+
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'accounts:user_detail' user_obj.id %}" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    
+                    <form method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-lg" 
+                                onclick="return confirm('Are you absolutely sure you want to delete user {{ user_obj.username }}? This action cannot be undone!')">
+                            <i class="bi bi-trash"></i> Delete User Permanently
+                        </button>
+                    </form>
+                </div>
+
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle"></i> 
+                        Alternative: Consider deactivating the user instead of deleting to preserve data integrity.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

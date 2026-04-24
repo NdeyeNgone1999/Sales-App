@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Recipe Summary & Analytics - Bariatrix Europe{% endblock %}
+
+{% block extra_css %}
+  <style>
+    /* Ensure navbar matches other pages exactly */
+    .navbar {
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+    .navbar .logo {
+      max-width: 180px;
+      height: auto;
+    }
+    .navbar-brand {
+      padding-top: 0.3125rem;
+      padding-bottom: 0.3125rem;
+      margin-right: 1rem;
+    }
+    
+    .main-content {
+      margin-top: 80px;
+      min-height: 80vh;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border: none;
+      border-radius: 1rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 1.5rem;
+      color: white;
+    }
+    
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #950b39;
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+      color: #6c757d;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .chart-container {
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    
+    .chart-title {
+      color: #950b39;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #950b39;
+    }
+    
+    .insights-card {
+      background: linear-gradient(135deg, #950b39 0%, #c41e3a 100%);
+      color: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .insight-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .insight-icon {
+      margin-right: 1rem;
+      font-size: 1.2rem;
+    }
+    
+    .dashboard-header {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 1rem;
+      padding: 3rem 2rem;
+      margin-bottom: 3rem;
+      text-align: center;
+    }
+    
+    .dashboard-title {
+      color: #950b39;
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+    
+    .dashboard-subtitle {
+      color: #6c757d;
+      font-size: 1.1rem;
+    }
+    
+    .metric-highlight {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin: 0.5rem 0;
+    }
+    
+    .table-responsive {
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+    
+    .table th {
+      background-color: #950b39;
+      color: white;
+      border: none;
+    }
+    
+    .export-actions {
+      background: #f8f9fa;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+      <h1 class="dashboard-title">
+        <i class="bi bi-graph-up"></i> Recipe Analytics Dashboard
+      </h1>
+      <p class="dashboard-subtitle">
+        Comprehensive insights and data analysis of the Bariatrix Europe recipe database
+      </p>
+    </div>
+
+    <!-- Key Statistics -->
+    <div class="row mb-5">
+      <div class="col-md-3 mb-4">
+        <div class="card stat-card h-100">
+          <div class="card-body text-center">
+            <div class="stat-icon" style="background-color: #28a745;">
+              <i class="bi bi-journal-text"></i>
+            </div>
+            <div class="stat-number">{{ total_recipes|default:0 }}</div>
+            <div class="stat-label">Total Recipes</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-3 mb-4">
+        <div class="card stat-card h-100">
+          <div class="card-body text-center">
+            <div class="stat-icon" style="background-color: #dc3545;">
+              <i class="bi bi-fire"></i>
+            </div>
+            <div class="stat-number">{{ nutritional_stats.avg_calories|floatformat:0|default:"N/A" }}</div>
+            <div class="stat-label">Avg Calories</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-3 mb-4">
+        <div class="card stat-card h-100">
+          <div class="card-body text-center">
+            <div class="stat-icon" style="background-color: #007bff;">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="stat-number">{{ nutritional_stats.avg_protein|floatformat:1|default:"N/A" }}g</div>
+            <div class="stat-label">Avg Protein</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-3 mb-4">
+        <div class="card stat-card h-100">
+          <div class="card-body text-center">
+            <div class="stat-icon" style="background-color: #ffc107;">
+              <i class="bi bi-tags"></i>
+            </div>
+            <div class="stat-number">{{ top_tags|length|default:0 }}</div>
+            <div class="stat-label">Unique Tags</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nutritional Insights -->
+    <div class="insights-card">
+      <h3 class="mb-4"><i class="bi bi-lightbulb"></i> Key Insights</h3>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="insight-item">
+            <i class="bi bi-arrow-up-right insight-icon"></i>
+            <div>
+              <strong>Highest Calorie Product:</strong> {{ nutritional_stats.max_calories|default:"N/A" }} kcal/100g
+            </div>
+          </div>
+          <div class="insight-item">
+            <i class="bi bi-arrow-down-right insight-icon"></i>
+            <div>
+              <strong>Lowest Calorie Product:</strong> {{ nutritional_stats.min_calories|default:"N/A" }} kcal/100g
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="insight-item">
+            <i class="bi bi-trophy insight-icon"></i>
+            <div>
+              <strong>Highest Protein:</strong> {{ nutritional_stats.max_protein|default:"N/A" }}g/100g
+            </div>
+          </div>
+          <div class="insight-item">
+            <i class="bi bi-graph-up insight-icon"></i>
+            <div>
+              <strong>Avg Carbohydrates:</strong> {{ nutritional_stats.avg_carbs|floatformat:1|default:"N/A" }}g/100g
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row">
+      {% if charts.calories_distribution %}
+      <div class="col-12 mb-4">
+        <div class="chart-container">
+          <h3 class="chart-title">Calorie Distribution Analysis</h3>
+          {{ charts.calories_distribution|safe }}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if charts.macronutrients %}
+      <div class="col-12 mb-4">
+        <div class="chart-container">
+          <h3 class="chart-title">Macronutrients Comparison</h3>
+          {{ charts.macronutrients|safe }}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if charts.tags_popularity %}
+      <div class="col-lg-6 mb-4">
+        <div class="chart-container">
+          <h3 class="chart-title">Popular Recipe Tags</h3>
+          {{ charts.tags_popularity|safe }}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if charts.portion_sizes %}
+      <div class="col-lg-6 mb-4">
+        <div class="chart-container">
+          <h3 class="chart-title">Portion Size Distribution</h3>
+          {{ charts.portion_sizes|safe }}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if charts.nutritional_quality %}
+      <div class="col-12 mb-4">
+        <div class="chart-container">
+          <h3 class="chart-title">Nutritional Quality Assessment</h3>
+          {{ charts.nutritional_quality|safe }}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Detailed Tables -->
+    <div class="row">
+      {% if portion_sizes %}
+      <div class="col-lg-6 mb-4">
+        <div class="chart-container">
+          <h3 class="chart-title">Top Portion Sizes</h3>
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Portion Size</th>
+                  <th>Recipe Count</th>
+                  <th>Percentage</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for portion in portion_sizes %}
+                <tr>
+                  <td><strong>{{ portion.portion_size }}</strong></td>
+                  <td>{{ portion.count }}</td>
+                  <td>{% widthratio portion.count total_recipes 100 %}%</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if top_tags %}
+      <div class="col-lg-6 mb-4">
+        <div class="chart-container">
+          <h3 class="chart-title">Most Used Tags</h3>
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Tag</th>
+                  <th>Usage Count</th>
+                  <th>Popularity</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for tag, count in top_tags %}
+                <tr>
+                  <td><span class="badge bg-primary">{{ tag }}</span></td>
+                  <td>{{ count }}</td>
+                  <td>
+                    <div class="progress" style="height: 20px;">
+                      {% with max_count=top_tags.0.1 %}
+                      <div class="progress-bar bg-success" role="progressbar" 
+                           style="width: {% widthratio count max_count 100 %}%"
+                           aria-valuenow="{{ count }}" aria-valuemin="0" aria-valuemax="{{ max_count }}">
+                        {% widthratio count max_count 100 %}%
+                      </div>
+                      {% endwith %}
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Export Actions -->
+    <div class="export-actions text-center">
+      <h4 class="mb-3">Export Analytics</h4>
+      <p class="text-muted mb-4">Generate reports and export data for further analysis</p>
+      <div class="btn-group" role="group">
+        <button class="btn btn-primary" onclick="window.print()">
+          <i class="bi bi-printer"></i> Print Report
+        </button>
+        <button class="btn btn-outline-success" onclick="exportToCSV()">
+          <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
+        </button>
+        <button class="btn btn-outline-info" onclick="shareReport()">
+          <i class="bi bi-share"></i> Share Report
+        </button>
+      </div>
+    </div>
+
+    <!-- Back to Home -->
+    <div class="text-center mt-4 mb-5">
+      <a href="{% url 'pages:home' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Recipe Search
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Print styles for better report formatting
+  const printStyles = `
+    @media print {
+      .main-content { margin-top: 0 !important; }
+      .btn, .export-actions { display: none !important; }
+      .chart-container { page-break-inside: avoid; }
+      .stat-card { page-break-inside: avoid; }
+      .insights-card { page-break-inside: avoid; }
+    }
+  `;
+  
+  // Add print styles to page
+  const styleSheet = document.createElement("style");
+  styleSheet.type = "text/css";
+  styleSheet.innerText = printStyles;
+  document.head.appendChild(styleSheet);
+  
+  // Export to CSV functionality
+  function exportToCSV() {
+    alert('CSV export functionality would generate a comprehensive data export including all nutritional metrics, tags, and analytics data.');
+  }
+  
+  // Share report functionality
+  function shareReport() {
+    if (navigator.share) {
+      navigator.share({
+        title: 'Bariatrix Europe Recipe Analytics Report',
+        text: 'Check out this comprehensive recipe database analysis!',
+        url: window.location.href
+      });
+    } else {
+      // Fallback: copy URL to clipboard
+      navigator.clipboard.writeText(window.location.href).then(function() {
+        alert('Report URL copied to clipboard!');
+      });
+    }
+  }
+  
+  // Add loading animations for charts
+  document.addEventListener('DOMContentLoaded', function() {
+    const chartContainers = document.querySelectorAll('.chart-container');
+    chartContainers.forEach(container => {
+      container.style.opacity = '0';
+      container.style.transform = 'translateY(20px)';
+      container.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      
+      setTimeout(() => {
+        container.style.opacity = '1';
+        container.style.transform = 'translateY(0)';
+      }, Math.random() * 500);
+    });
+  });
+</script>
+{% endblock %}

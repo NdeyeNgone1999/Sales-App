@@ -1,0 +1,121 @@
+{% extends "portal_shell.html" %}
+{% load static %}
+
+{% block title %}Service Commercial{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/portal_home.css' %}">
+{% endblock %}
+
+{% block content %}
+  <div id="vanta-service-commercial" class="portal-home-vanta" aria-hidden="true"></div>
+
+  <section class="portal-home-hero">
+    <div class="portal-container">
+      <div class="portal-home-grid">
+        <div class="portal-home-copy">
+          <span class="portal-kicker">
+            <i class="bi bi-command"></i>
+            Portail unifié
+          </span>
+          <h1 class="portal-home-title">Un seul point d'entrée pour piloter le Service Commercial.</h1>
+          <p class="portal-home-lead">
+            Passez des analyses clients aux fiches techniques sans rupture visuelle ni friction de navigation.
+            Le portail rassemble les deux univers dans une interface cohérente, plus claire et plus rapide à explorer.
+          </p>
+
+          <div class="portal-home-cta">
+            <a href="{% url 'client_analytics:home' %}" class="btn btn-primary btn-lg">
+              <i class="bi bi-bar-chart-line me-2"></i>
+              Ouvrir Client Analytics
+            </a>
+            <a href="{% url 'pages:home' %}" class="btn btn-outline-primary btn-lg">
+              <i class="bi bi-journal-richtext me-2"></i>
+              Ouvrir Fiches Techniques
+            </a>
+          </div>
+
+          <div class="portal-home-stats">
+            <div class="portal-home-stat">
+              <span class="portal-home-stat__value">{{ datasets_count }}</span>
+              <span class="portal-home-stat__label">datasets analytics</span>
+            </div>
+            <div class="portal-home-stat">
+              <span class="portal-home-stat__value">{{ recipes_count }}</span>
+              <span class="portal-home-stat__label">fiches techniques</span>
+            </div>
+            <div class="portal-home-stat">
+              <span class="portal-home-stat__value">
+                {% if latest_dataset %}{{ latest_dataset.name|truncatechars:18 }}{% else %}Prêt{% endif %}
+              </span>
+              <span class="portal-home-stat__label">dernier dataset</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="portal-home-panels">
+          <article class="portal-home-panel portal-home-panel--analytics">
+            <div class="portal-home-panel__icon">
+              <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <h2>Client Analytics</h2>
+            <p>Importer un dataset, explorer les tendances, segmenter les clients et suivre les signaux commerciaux.</p>
+            <ul class="portal-home-list">
+              <li>Overview, stats et anomalies</li>
+              <li>Clustering et projections</li>
+              <li>Parcours dataset complet</li>
+            </ul>
+            <a href="{% url 'client_analytics:home' %}" class="portal-home-link">
+              Entrer dans Client Analytics
+              <i class="bi bi-arrow-up-right"></i>
+            </a>
+          </article>
+
+          <article class="portal-home-panel portal-home-panel--recipes">
+            <div class="portal-home-panel__icon">
+              <i class="bi bi-file-earmark-medical"></i>
+            </div>
+            <h2>Fiches Techniques</h2>
+            <p>Rechercher une recette, filtrer par ingrédients et allergènes, et exploiter les données nutritionnelles.</p>
+            <ul class="portal-home-list">
+              <li>Moteur de recherche avancé</li>
+              <li>Détails recettes et exports Word</li>
+              <li>Synthèse et insights produits</li>
+            </ul>
+            <a href="{% url 'pages:home' %}" class="portal-home-link">
+              Entrer dans Fiches Techniques
+              <i class="bi bi-arrow-up-right"></i>
+            </a>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!window.VANTA) return;
+
+      VANTA.NET({
+        el: '#vanta-service-commercial',
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        minHeight: 200.0,
+        minWidth: 200.0,
+        scale: 1.0,
+        scaleMobile: 1.0,
+        color: 0x950b39,
+        backgroundColor: 0xf8f3ed,
+        points: 14.0,
+        maxDistance: 22.0,
+        spacing: 18.0,
+        showDots: true
+      });
+    });
+  </script>
+{% endblock %}

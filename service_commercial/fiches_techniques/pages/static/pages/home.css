@@ -1,0 +1,90 @@
+.hero{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:4rem 1rem;
+  background: transparent;         
+}
+
+.hero::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:rgba(255,255,255,.6);  
+  z-index:-1;
+}
+
+.btn-xl {
+padding: 1rem 2.5rem;
+font-size: 1.25rem;
+}
+
+.features .card {
+border: none;
+}
+
+/* Form improvements */
+.form-select:focus, .form-control:focus {
+  border-color: #950b39;
+  box-shadow: 0 0 0 0.2rem rgba(149, 11, 57, 0.25);
+}
+
+.form-text {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+}
+
+.search-form .card {
+  border: 1px solid rgba(149, 11, 57, 0.2);
+}
+
+.search-form .card-body {
+  padding: 2rem;
+}
+
+/* Nutritional values section styling */
+.nutritional-section {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+}
+
+.nutritional-section h6 {
+  color: #950b39;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* Statistics section styling */
+.stats {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.stats .card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stats .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Button improvements */
+.btn-primary {
+  background-color: #950b39;
+  border-color: #950b39;
+}
+
+.btn-primary:hover {
+  background-color: #7a092e;
+  border-color: #7a092e;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+

@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management - Bariatrix{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>User Management</h2>
+        <a href="{% url 'accounts:register' %}" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Create New User
+        </a>
+    </div>
+    
+    <!-- Search Form -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form method="get" class="d-flex">
+                <input type="text" name="search" class="form-control" placeholder="Search users..." value="{{ search_query }}">
+                <button type="submit" class="btn btn-outline-secondary ms-2">Search</button>
+                {% if search_query %}
+                    <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-danger ms-2">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+    
+    <!-- Users Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Department</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user_obj in page_obj %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'accounts:user_detail' user_obj.id %}">{{ user_obj.username }}</a>
+                            </td>
+                            <td>{{ user_obj.first_name }} {{ user_obj.last_name }}</td>
+                            <td>{{ user_obj.email|default:"-" }}</td>
+                            <td>
+                                {% if user_obj.profile.role %}
+                                    <span class="badge bg-info">{{ user_obj.profile.role }}</span>
+                                {% else %}
+                                    <span class="text-muted">No role</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user_obj.profile.department|default:"-" }}</td>
+                            <td>
+                                {% if user_obj.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user_obj.date_joined|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'accounts:user_detail' user_obj.id %}" class="btn btn-outline-primary">View</a>
+                                    <a href="{% url 'accounts:edit_user' user_obj.id %}" class="btn btn-outline-secondary">Edit</a>
+                                    {% if request.user.is_staff and user_obj != request.user %}
+                                        <a href="{% url 'accounts:delete_user' user_obj.id %}" class="btn btn-outline-danger" 
+                                           title="Delete User">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">
+                                {% if search_query %}
+                                    No users found matching "{{ search_query }}".
+                                {% else %}
+                                    No users found.
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="User pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

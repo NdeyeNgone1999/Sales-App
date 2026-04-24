@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Update Recipes - Bariatrix Europe{% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'pages/home.css' %}">
+  <style>
+    body { background: #f8f9fa; }
+    .main-content { margin-top: 100px; min-height: 80vh; }
+    .card { border: none; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
+    .card-header { background: white; border-bottom: 1px solid #eee; }
+    .progress { height: 20px; }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="container main-content">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h3 class="mb-0">
+            <i class="bi bi-cloud-upload"></i> Update Recipes from PDFs
+          </h3>
+        </div>
+
+        <div class="card-body">
+          <div class="alert alert-info">
+            <strong>How it works (Heroku-friendly):</strong>
+            <ul class="mb-0 mt-2">
+              <li><b>Option A:</b> Upload a <b>ZIP</b> that contains your PDF recipe sheets (recommended for many files).</li>
+              <li><b>Option B:</b> Select multiple <b>PDF files</b> directly.</li>
+              <li>We extract/process them on the server’s temporary storage and update/create recipes in the database.</li>
+              <li>The temporary files are deleted after processing.</li>
+            </ul>
+          </div>
+
+          <form method="post" action="{% url 'pages:update_recipes' %}" enctype="multipart/form-data" id="update-form">
+            {% csrf_token %}
+            <div class="mb-4">
+              <label class="form-label"><strong>Upload ZIP</strong></label>
+              <input type="file" name="zip_file" accept=".zip" class="form-control">
+              <div class="form-text">Upload a single .zip containing all your PDFs.</div>
+            </div>
+
+            <div class="text-center text-muted mb-3">— or —</div>
+
+            <div class="mb-4">
+              <label class="form-label"><strong>Select PDF files</strong></label>
+              <input type="file" name="pdfs" accept="application/pdf" class="form-control" multiple>
+              <div class="form-text">You can select multiple PDFs at once.</div>
+            </div>
+
+            <div id="progress_container" style="display:none;">
+              <div class="d-flex justify-content-between">
+                <small id="progress_text" class="text-muted">0 / 0 files</small>
+                <small id="progress_message" class="text-muted">Initializing...</small>
+              </div>
+              <div class="progress mb-2">
+                <div id="progress_bar" class="progress-bar progress-bar-striped progress-bar-animated"
+                     role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                  0%
+                </div>
+              </div>
+              
+              <!-- Results Summary -->
+              <div id="results_summary" style="display:none;" class="mt-3">
+                <div class="row">
+                  <div class="col-md-3">
+                    <div class="text-center">
+                      <div class="h4 text-success mb-0" id="created_count">0</div>
+                      <small class="text-muted">Created</small>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="text-center">
+                      <div class="h4 text-info mb-0" id="updated_count">0</div>
+                      <small class="text-muted">Updated</small>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="text-center">
+                      <div class="h4 text-warning mb-0" id="warning_count">0</div>
+                      <small class="text-muted">Warnings</small>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="text-center">
+                      <div class="h4 text-danger mb-0" id="error_count">0</div>
+                      <small class="text-muted">Errors</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Error Details -->
+              <div id="error_container" class="mt-2" style="display:none;">
+                <div class="alert alert-warning">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <strong>Issues encountered:</strong>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="toggle_details">
+                      Show Details
+                    </button>
+                  </div>
+                  <ul id="error_list" class="mb-0 mt-1"></ul>
+                </div>
+              </div>
+              
+              <!-- Detailed File Statistics -->
+              <div id="file_stats_container" class="mt-3" style="display:none;">
+                <div class="card">
+                  <div class="card-header">
+                    <h6 class="mb-0">📊 File Processing Details</h6>
+                  </div>
+                  <div class="card-body p-0">
+                    <div class="table-responsive">
+                      <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                          <tr>
+                            <th>Filename</th>
+                            <th>Status</th>
+                            <th>Product ID</th>
+                            <th>Issues</th>
+                          </tr>
+                        </thead>
+                        <tbody id="file_stats_body">
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Warnings -->
+              <div id="warning_container" class="mt-2" style="display:none;">
+                <div class="alert alert-info">
+                  <strong>⚠️ Warnings:</strong>
+                  <ul id="warning_list" class="mb-0 mt-1"></ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <a href="{% url 'pages:home' %}" class="btn btn-secondary me-md-2" id="cancel_btn">
+                <i class="bi bi-arrow-left"></i> Cancel
+              </a>
+              <button type="submit" class="btn btn-primary" id="submit_btn">
+                <i class="bi bi-play-fill"></i> Start Processing
+              </button>
+              <button type="button" class="btn btn-success" id="complete_btn" style="display:none;">
+                <i class="bi bi-check-circle"></i> Processing Complete
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="mt-3 text-center text-muted">
+        Need help? Contact the admin.
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('update-form');
+  const progressContainer = document.getElementById('progress_container');
+  const progressBar = document.getElementById('progress_bar');
+  const progressText = document.getElementById('progress_text');
+  const progressMessage = document.getElementById('progress_message');
+  const errorContainer = document.getElementById('error_container');
+  const errorList = document.getElementById('error_list');
+  const warningContainer = document.getElementById('warning_container');
+  const warningList = document.getElementById('warning_list');
+  const fileStatsContainer = document.getElementById('file_stats_container');
+  const fileStatsBody = document.getElementById('file_stats_body');
+  const resultsContainer = document.getElementById('results_summary');
+  const submitBtn = document.getElementById('submit_btn');
+  const completeBtn = document.getElementById('complete_btn');
+  const toggleDetailsBtn = document.getElementById('toggle_details');
+  
+  let showingDetails = false;
+
+  function updateProgress(current, total, message, data) {
+    const pct = total > 0 ? Math.floor((current / total) * 100) : 0;
+    progressBar.style.width = pct + '%';
+    progressBar.setAttribute('aria-valuenow', pct);
+    progressBar.textContent = pct + '%';
+    progressText.textContent = `${current} / ${total} files`;
+    progressMessage.textContent = message || '';
+    
+    // Update results summary if we have stats
+    if (data.stats) {
+      const stats = data.stats;
+      document.getElementById('created_count').textContent = stats.created_recipes || 0;
+      document.getElementById('updated_count').textContent = stats.updated_recipes || 0;
+      document.getElementById('warning_count').textContent = (stats.warnings || []).length;
+      document.getElementById('error_count').textContent = (stats.errors || []).length;
+      resultsContainer.style.display = 'block';
+    }
+    
+    // Handle errors
+    const errors = data.errors || [];
+    if (errors.length) {
+      errorContainer.style.display = 'block';
+      errorList.innerHTML = '';
+      errors.slice(0, 5).forEach(e => {  // Show first 5 errors
+        const li = document.createElement('li');
+        li.textContent = e;
+        errorList.appendChild(li);
+      });
+      if (errors.length > 5) {
+        const li = document.createElement('li');
+        li.innerHTML = `<em>... and ${errors.length - 5} more errors</em>`;
+        errorList.appendChild(li);
+      }
+    }
+    
+    // Handle warnings
+    const warnings = data.warnings || [];
+    if (warnings.length) {
+      warningContainer.style.display = 'block';
+      warningList.innerHTML = '';
+      warnings.slice(0, 5).forEach(w => {  // Show first 5 warnings
+        const li = document.createElement('li');
+        li.textContent = w;
+        warningList.appendChild(li);
+      });
+      if (warnings.length > 5) {
+        const li = document.createElement('li');
+        li.innerHTML = `<em>... and ${warnings.length - 5} more warnings</em>`;
+        warningList.appendChild(li);
+      }
+    }
+    
+    // Handle detailed file statistics
+    if (data.file_stats && Object.keys(data.file_stats).length > 0 && showingDetails) {
+      showFileStats(data.file_stats);
+    }
+  }
+  
+  function showFileStats(fileStats) {
+    fileStatsBody.innerHTML = '';
+    
+    Object.entries(fileStats).forEach(([filename, stats]) => {
+      const row = document.createElement('tr');
+      
+      // Status badge
+      let statusBadge = '';
+      const status = stats.status || 'unknown';
+      switch(status) {
+        case 'saved':
+        case 'processed':
+          statusBadge = `<span class="badge bg-success">${status}</span>`;
+          break;
+        case 'failed':
+        case 'exception':
+        case 'db_error':
+        case 'no_product_id':
+          statusBadge = `<span class="badge bg-danger">${status}</span>`;
+          break;
+        default:
+          statusBadge = `<span class="badge bg-secondary">${status}</span>`;
+      }
+      
+      // Issues count
+      const errorCount = (stats.processing_errors || []).length;
+      const warningCount = (stats.warnings || []).length;
+      let issuesText = '';
+      if (errorCount > 0) issuesText += `${errorCount} errors `;
+      if (warningCount > 0) issuesText += `${warningCount} warnings`;
+      if (!issuesText) issuesText = 'None';
+      
+      row.innerHTML = `
+        <td class="text-truncate" style="max-width: 200px;" title="${filename}">${filename}</td>
+        <td>${statusBadge}</td>
+        <td class="font-monospace">${stats.product_id || 'N/A'}</td>
+        <td>${issuesText}</td>
+      `;
+      
+      fileStatsBody.appendChild(row);
+    });
+    
+    fileStatsContainer.style.display = 'block';
+  }
+
+  function poll(taskId) {
+    const progressUrl = "{% url 'pages:check_progress' '__TASK_ID__' %}".replace('__TASK_ID__', taskId);
+    fetch(progressUrl)
+      .then(resp => resp.json())
+      .then(data => {
+        updateProgress(data.current || 0, data.total || 0, data.message || '', data);
+        
+        if (data.status === 'completed') {
+          progressBar.classList.remove('progress-bar-animated');
+          progressBar.classList.add('bg-success');
+          submitBtn.disabled = false;
+          completeBtn.style.display = 'inline-block';
+          
+          // Show success rate
+          if (data.success_rate !== undefined) {
+            progressMessage.textContent = `Completed with ${data.success_rate.toFixed(1)}% success rate`;
+          }
+          return;
+        }
+        
+        if (data.status === 'error') {
+          progressBar.classList.remove('progress-bar-animated');
+          progressBar.classList.add('bg-danger');
+          progressMessage.textContent = 'Processing failed';
+          submitBtn.disabled = false;
+          return;
+        }
+        
+        setTimeout(() => poll(taskId), 1000);
+      })
+      .catch(err => {
+        console.error(err);
+        setTimeout(() => poll(taskId), 2000);
+      });
+  }
+  
+  // Toggle details button
+  toggleDetailsBtn.addEventListener('click', function() {
+    showingDetails = !showingDetails;
+    if (showingDetails) {
+      toggleDetailsBtn.textContent = 'Hide Details';
+      fileStatsContainer.style.display = 'block';
+    } else {
+      toggleDetailsBtn.textContent = 'Show Details';
+      fileStatsContainer.style.display = 'none';
+    }
+  });
+
+  form.addEventListener('submit', function(ev) {
+    ev.preventDefault();
+    const formData = new FormData(form);
+    progressContainer.style.display = 'block';
+    submitBtn.disabled = true;
+    errorContainer.style.display = 'none';
+    warningContainer.style.display = 'none';
+    fileStatsContainer.style.display = 'none';
+    resultsContainer.style.display = 'none';
+    progressBar.classList.add('progress-bar-animated');
+    progressBar.classList.remove('bg-success', 'bg-danger');
+    updateProgress(0, 0, 'Starting processing...', {});
+
+    fetch(form.action, {
+      method: 'POST',
+      body: formData,
+      headers: {'X-CSRFToken': formData.get('csrfmiddlewaretoken')}
+    })
+    .then(resp => resp.json())
+    .then(data => {
+      if (data.error) { throw new Error(data.error); }
+      poll(data.task_id);
+    })
+    .catch(error => {
+      submitBtn.disabled = false;
+      const alertDiv = document.createElement('div');
+      alertDiv.className = 'alert alert-danger mt-3';
+      alertDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+      form.appendChild(alertDiv);
+    });
+  });
+
+  completeBtn.addEventListener('click', function() {
+    window.location.href = "{% url 'pages:home' %}";
+  });
+});
+</script>
+{% endblock %}
